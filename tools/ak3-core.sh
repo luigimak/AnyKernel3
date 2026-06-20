@@ -1008,12 +1008,20 @@ version_ge() {
 do_check_boot_version() {
   ui_print " " "  -> Check kernel version compatibility..."
 
-  # BYPASS: do.check_boot_version=0 in anykernel.sh skips check
-  if [ "$(file_getprop anykernel.sh do.check_boot_version)" != 1 ]; then
-    ui_print "  -> [BYPASS] do.check_boot_version=0: version check SKIPPED."
-    ui_print "  -> [BYPASS] Forced flash. Proceed with caution!"
-    return 1
-  fi
+  # 0=disabled silent, 1=enabled, 2=disabled+warn
+  local check_mode
+  check_mode=$(file_getprop anykernel.sh do.check_boot_version)
+  case "$check_mode" in
+    0) return 0 ;;
+    2)
+        ui_print "  -> [BYPASS] do.check_boot_version=2: version check SKIPPED."
+        ui_print "  -> [BYPASS] Forced flash. Proceed with caution!"
+        return 0 ;;
+    1) ;;
+    *)
+        ui_print "  -> [WARN] do.check_boot_version=$check_mode unknown, skip."
+        return 0 ;;
+  esac
 
   local new_ver dev_ver new_kver new_abranch dev_kver dev_abranch
 
